@@ -24,6 +24,7 @@ app.post('/inicio',(req, res)=>{
     })
 });
 
+
 app.get('/hola',(req, res)=>{
     res.status(200).send({
         message: 'Hola Mundo desde Nodejs' 

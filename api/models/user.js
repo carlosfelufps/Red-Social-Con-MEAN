@@ -12,4 +12,5 @@ var UserSchema = Schema({
     image: String
 });
 
+//cuando guardemos en bd User se vuelve users
 module.exports = mongoose.model('User', UserSchema);
