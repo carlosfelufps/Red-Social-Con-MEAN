@@ -1,7 +1,12 @@
 'use strict'
+var bcrypt = require('bcrypt-nodejs');
+
+
 //primera en mayuscula para saber que es un modelo
 var User = require('../models/user');
-var bcrypt = require('bcrypt-nodejs');
+var jwt=require('../services/jwt');
+
+
 function home(req, res){
     console.log(req.body);
     res.status(200).send({
@@ -41,9 +46,10 @@ function saveUser(req,res){
             if(users && users.length >=1){
                 return res.status(200).send({message: 'El Usuario ya existe'});
             }else{
-                //Crifro la password
+            //Crifro la password
             bcrypt.hash(params.password, null, null,(err, hash) =>{
             user.password=hash;
+            
             user.save((err, userStored) =>{ //guardo el usuario con mongoose
                 if(err) return res.status(500).send({message: 'Error al Guardar el usuario'});
                 if(userStored){
@@ -61,9 +67,41 @@ function saveUser(req,res){
         });
     }
 }
+function loginUser(req, res){
+  var params=req.body;
 
+  var email=params.email;
+  var password=params.password;
+
+  User.findOne({email: email}, (err, user)=>{
+      if(err) return res.status(500).send({message: 'Error en la peticion'});
+
+      if(user){
+          bcrypt.compare(password, user.password, (err, check)=>{//comparo la del POST con la encriptada
+            if(check){
+                 user.password=undefined;//elimino la contraseña de los datos que retorno
+                 //devolver datos de usuario
+                 if(params.gettoken){
+                      //generar y devolver token
+                      return res.status(200).send({
+                          token: jwt.createToken(user)
+                      });
+
+                 }else{
+                    return res.status(200).send({user});
+                 }
+            }else{
+                  res.status(404).send({message:'El usuario no se ha podido identificar'});
+            }
+          });
+      }else{
+        res.status(404).send({message:'El usuario no se ha podido identificar'});
+      }
+  });
+}
 module.exports={
     home,
     pruebas,
-    saveUser
+    saveUser,
+    loginUser
 }
