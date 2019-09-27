@@ -6,15 +6,13 @@ var bcrypt = require('bcrypt-nodejs');
 var User = require('../models/user');
 var jwt=require('../services/jwt');
 
-
+//metodos de prueba
 function home(req, res){
     console.log(req.body);
     res.status(200).send({
         message: 'Hola Inicio' 
     })
 };
-
-
 function pruebas(req, res){
     res.status(200).send({
         message: 'Hola desde Prueba' 
@@ -67,6 +65,7 @@ function saveUser(req,res){
         });
     }
 }
+//Login
 function loginUser(req, res){
   var params=req.body;
 
@@ -99,9 +98,23 @@ function loginUser(req, res){
       }
   });
 }
+//Conseguir datos de un usuario
+function getUser(req, res){
+    //cuando los datos son por get se usa params, cuando es por post o put usamos body
+    var userId=req.params.id;
+
+    User.findById(userId, (err, user) =>{
+        if(err) return res.status(500).send({message: 'Error en la peticion'});
+        if(!user) return res.status(404).send({message: 'El usuario no exite'});
+        return res.status(200).send({user});
+    });
+}
+
+
 module.exports={
     home,
     pruebas,
     saveUser,
-    loginUser
+    loginUser,
+    getUser
 }
