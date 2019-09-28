@@ -1,6 +1,6 @@
 'use strict'
 var bcrypt = require('bcrypt-nodejs');
-
+var mongoosePaginate=require('mongoose-pagination');
 
 //primera en mayuscula para saber que es un modelo
 var User = require('../models/user');
@@ -19,8 +19,8 @@ function pruebas(req, res){
     })
 };
 
+// Registro
 function saveUser(req,res){
-  
     var params = req.body;
     //creo el usuario que voy a guardar
     var user= new User();
@@ -98,23 +98,44 @@ function loginUser(req, res){
       }
   });
 }
-//Conseguir datos de un usuario
+//Conseguir datos de un usuario por ID.
 function getUser(req, res){
     //cuando los datos son por get se usa params, cuando es por post o put usamos body
     var userId=req.params.id;
 
     User.findById(userId, (err, user) =>{
         if(err) return res.status(500).send({message: 'Error en la peticion'});
-        if(!user) return res.status(404).send({message: 'El usuario no exite'});
+        if(!user) return res.status(404).send({message: 'El usuario no existe'});
         return res.status(200).send({user});
     });
 }
 
+//Devolver un listado de usuarios paginados
+function getUsers(req, res){
+     var identity_user_id = req.user.sub;//payload propiedad sub
+     var page=1;
+     if(req.params.page){
+       page=req.params.page;
+     }
+     var itemsPerPage=5;
+
+     User.find().sort('_id').paginate(page,itemsPerPage,(err,users,total)=>{
+        if(err) return res.status(500).send({message: 'Error en la peticion'});
+        if(!users) return res.status(404).send({message: 'No hay Usuarios disponibles'});
+     
+        return res.status(200).send({
+            users,
+            total,
+            pages: Math.ceil(total/itemsPerPage)
+        });
+    });
+}
 
 module.exports={
     home,
     pruebas,
     saveUser,
     loginUser,
-    getUser
+    getUser,
+    getUsers
 }
