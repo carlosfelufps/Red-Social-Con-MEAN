@@ -16,4 +16,5 @@ api.get('/user/:id', md_auth.ensureAuth, UserController.getUser);
 api.get('/users/:page?',md_auth.ensureAuth, UserController.getUsers);
 api.put('/update-user/:id',md_auth.ensureAuth,UserController.updateUser);
 api.post('/upload-image-user/:id',[md_auth.ensureAuth,md_upload], UserController.uploadImage);//paso un array porque son varios middlewares
+api.get('/get-image-user/:imageFile',UserController.getImageFile);
 module.exports=api;

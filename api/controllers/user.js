@@ -152,7 +152,7 @@ function updateUser(req, res){
 function uploadImage(req, res){
     var userId= req.params.id;//recoger id de la url
     if(userId != req.user.sub){
-        removeFiles(res, file_path, 'No tienes permiso para actualizar los datos de usuario');
+       return removeFiles(res, file_path, 'No tienes permiso para actualizar los datos de usuario');
          }
     if(req.files){
         var file_path= req.files.image.path;
@@ -171,10 +171,15 @@ function uploadImage(req, res){
 
 
         if(file_ext=='png'|| file_ext=='jpg'|| file_ext=='jpeg'|| file_ext=='gif'){
-             //actualizo documento de usuario logueado
-        
+             User.findByIdAndUpdate(userId, {image: file_name}, {new:true},(err, userUpdate)=>{
+                if(err) return res.status(500).send({message: 'Error en la peticion'});
+               
+                if(!userUpdate) return res.status(404).send({message: 'No se ha podido actualizar el usuario'});
+
+                return res.status(200).send({user: userUpdate});
+             });
             }else{
-                removeFiles(res, file_path, 'Extension no valida');
+               return removeFiles(res, file_path, 'Extension no valida');
         }
     }else{
         return res.status(200).send({message: 'No se ha subido una imagen'});
@@ -186,6 +191,19 @@ function removeFiles(res, file_path, mensaje){
         return res.status(200).send({message: mensaje});
     });
 }
+
+function getImageFile(req, res){
+   var image_file= req.params.imageFile;
+   var path_file ='./uploads/user/'+image_file;
+   fs.exists(path_file, (exist)=>{
+       if(exist){
+           res.sendFile(path.resolve(path_file));
+       }else{
+           res.status(200).send({message: 'No existe la imagen'});
+       }
+   });
+}
+
 module.exports={
     home,
     pruebas,
@@ -194,5 +212,6 @@ module.exports={
     getUser,
     getUsers,
     updateUser,
-    uploadImage
+    uploadImage,
+    getImageFile
 }
