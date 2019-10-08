@@ -50,8 +50,7 @@ function getFollowingUsers(req, res){
 
     var itemsPerPage = 4 ;
 
-    console.log(page);
-    Follow.find({user:userId}).populate({path: 'followed'}).paginate(page,itemsPerPage,(err, follows, total)=>{//el populate es para mostrar la informacion interna de el usuario seguido, en vez de mostrar el id solamente
+    Follow.find({user:userId}).populate('followed').paginate(page,itemsPerPage,(err, follows, total)=>{//el populate es para mostrar la informacion interna de el usuario seguido, en vez de mostrar el id solamente
         console.log(page);
         if(err) return res.status(500).send({message : 'Error en el servidor'});
         if(!follows) return res.status(404).send({message: 'No estas siguiendo a ningun usuario'});
@@ -61,13 +60,34 @@ function getFollowingUsers(req, res){
             follows
         });
     });
-
-
-
+}
+//listar los usuarios que siguen a determinado usuario
+function getFollowersUsers(req, res){
+var userId = req.user.sub;
+    if(req.params.id&&req.params.page){
+        userId=req.params.id;
+    }s
+    var page=1;
+    if(req.params.page){
+        page=req.params.page;
+    }else if(req.params.id){
+        page=req.params.id; 
+    }
+    var itemsPerPage = 4 ;
+    Follow.find({followed:userId}).populate('user').paginate(page,itemsPerPage,(err, follows, total)=>{//el populate es para mostrar la informacion interna de el usuario, en vez de mostrar el id solamente
+        if(err) return res.status(500).send({message : 'Error en el servidor'});
+        if(!follows) return res.status(404).send({message: 'No te sigue ningun usuario'});
+        return res.status(200).send({
+            total : total,
+            pages: Math.ceil(total/itemsPerPage),
+            follows
+        });
+    });
 }
 
 module.exports={
      saveFollow,
      deleteFollow,
-     getFollowingUsers
+     getFollowingUsers,
+     getFollowersUsers
 }
