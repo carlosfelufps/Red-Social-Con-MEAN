@@ -6,6 +6,7 @@ var path=require('path');
 
 //primera en mayuscula para saber que es un modelo
 var User = require('../models/user');
+var Follow = require('../models/follow');
 var jwt=require('../services/jwt');
 
 //metodos de prueba
@@ -100,6 +101,7 @@ function loginUser(req, res){
       }
   });
 }
+
 //Conseguir datos de un usuario por ID.
 function getUser(req, res){
     //cuando los datos son por get se usa params, cuando es por post o put usamos body
@@ -107,9 +109,34 @@ function getUser(req, res){
 
     User.findById(userId, (err, user) =>{
         if(err) return res.status(500).send({message: 'Error en la peticion'});
+        
         if(!user) return res.status(404).send({message: 'El usuario no existe'});
-        return res.status(200).send({user});
+        
+        followThisUser(req.user.sub, userId).then((value)=>{
+        return res.status(200).send({
+            user, 
+            following: value.following,
+            followed: value.followed
+        });
+       });
     });
+}
+
+async function followThisUser(identity_user_id, user_id){
+    var following =await Follow.findOne({"user":identity_user_id, "followed":user_id}).exec((err, follow)=>{
+        if(err) return handleError(err);
+        return follow;
+    });
+
+    var followed = await Follow.findOne({"user":user_id, "followed":identity_user_id}).exec((err, follow)=>{
+        if(err) return handleError(err);
+        return follow;
+    });
+
+    return {
+        following: following,
+        followed: followed
+    }
 }
 
 //Devolver un listado de usuarios paginados
@@ -125,12 +152,42 @@ function getUsers(req, res){
         if(err) return res.status(500).send({message: 'Error en la peticion'});
         if(!users) return res.status(404).send({message: 'No hay Usuarios disponibles'});
      
-        return res.status(200).send({
-            users,
-            total,
-            pages: Math.ceil(total/itemsPerPage)
+        followUserIds(identity_user_id).then((value)=>{
+            return res.status(200).send({
+                users,
+                users_following:value.following,
+                users_follow_me:value.followed,
+                total,
+                pages: Math.ceil(total/itemsPerPage)
+            });
         });
+        
     });
+}
+
+async function followUserIds(user_id){
+    //los que sigo
+    var following= await Follow.find({"user":user_id}).select({'_id':0,'_v':0, 'user':0}).exec((err,follows)=>{
+        var follows_clean = [];
+        follows.forEach((follow)=>{
+            follows_clean.push(follow.followed);
+        });
+        return follows_clean;
+    });
+    
+
+    //los que me siguen
+    var followed= await Follow.find({"followed":user_id}).select({'_id':0,'_v':0, 'followed':0}).exec((err,follows)=>{
+        var follows_clean = [];
+        follows.forEach((follow)=>{
+            follows_clean.push(follow.user);
+        });
+        return follows_clean;
+    });
+    return {
+        following: following,
+        followed: followed
+    }
 }
 function updateUser(req, res){
    var userId= req.params.id;//recoger id de la url
