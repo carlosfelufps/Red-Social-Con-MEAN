@@ -168,27 +168,62 @@ function getUsers(req, res){
 async function followUserIds(user_id){
     //los que sigo
     var following= await Follow.find({"user":user_id}).select({'_id':0,'_v':0, 'user':0}).exec((err,follows)=>{
-        var follows_clean = [];
-        follows.forEach((follow)=>{
-            follows_clean.push(follow.followed);
-        });
-        return follows_clean;
+        return follows;
     });
     
 
     //los que me siguen
     var followed= await Follow.find({"followed":user_id}).select({'_id':0,'_v':0, 'followed':0}).exec((err,follows)=>{
-        var follows_clean = [];
-        follows.forEach((follow)=>{
-            follows_clean.push(follow.user);
+        return follows;
+    });
+
+    //procesar following_ids
+    var following_clean = [];
+        following.forEach((follow)=>{
+            following_clean.push(follow.followed);
         });
-        return follows_clean;
+
+    //procesar followed_ids    
+    var followed_clean = [];
+    followed.forEach((follow)=>{
+        followed_clean.push(follow.user);
     });
     return {
-        following: following,
-        followed: followed
+        following: following_clean,
+        followed: followed_clean
     }
 }
+
+function getCounters(req,res){
+    var userId=req.user.sub;
+    if(req.params.id){
+          userId=req.params.id;  
+    }
+    getCountFollow(req.params.id).then((value)=>{
+        return res.status(200).send(value);
+    });
+}
+
+async function getCountFollow(user_id){
+         var following = await Follow.count({"user":user_id}).exec((err,count)=>{
+             if(err){
+                 return handleError(err);
+             }
+             return count;
+         });
+
+         var followed = await Follow.count({"followed":user_id}).exec((err,count)=>{
+            if(err){
+                return handleError(err);
+            }
+            return count;
+        });
+        return{
+            following : following,
+            followed: followed
+        }
+}
+
 function updateUser(req, res){
    var userId= req.params.id;//recoger id de la url
    var update=req.body;
@@ -268,6 +303,7 @@ module.exports={
     loginUser,
     getUser,
     getUsers,
+    getCounters,
     updateUser,
     uploadImage,
     getImageFile
