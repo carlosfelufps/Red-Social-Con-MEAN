@@ -7,6 +7,7 @@ var path=require('path');
 //primera en mayuscula para saber que es un modelo
 var User = require('../models/user');
 var Follow = require('../models/follow');
+var Publication = require('../models/publication');
 var jwt=require('../services/jwt');
 
 //metodos de prueba
@@ -218,9 +219,18 @@ async function getCountFollow(user_id){
             }
             return count;
         });
+
+        var publications = await Publication.count({"user":user_id}).exec((err, count)=>{
+            if(err){
+                return handleError(err);
+            }
+            return count;
+        });
+
         return{
             following : following,
-            followed: followed
+            followed: followed,
+            publications : publications
         }
 }
 
@@ -286,7 +296,7 @@ function removeFiles(res, file_path, mensaje){
 
 function getImageFile(req, res){
    var image_file= req.params.imageFile;
-   var path_file ='./uploads/user/'+image_file;
+   var path_file ='./uploads/users/'+image_file;
    fs.exists(path_file, (exist)=>{
        if(exist){
            res.sendFile(path.resolve(path_file));
