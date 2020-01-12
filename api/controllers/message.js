@@ -1,6 +1,5 @@
 'use strict'
-
-var momment = require('momment');
+var moment = require('moment');
 var mongoosePaginate= require('mongoose-pagination');
 
 var User = require('../models/user');
