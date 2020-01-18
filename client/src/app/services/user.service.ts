@@ -17,4 +17,11 @@ export class UserService{
 
         return this._http.post(this.url+'register',params,{headers:headers});
     }
+    singup(user ,gettoken=null): Observable<any>{
+        console.log(gettoken);
+        if(gettoken != null){
+            user.gettoken=gettoken;
+        }
+        return this._http.post(this.url+'login',user);
+    }
 }
