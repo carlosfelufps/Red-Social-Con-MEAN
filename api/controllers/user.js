@@ -72,8 +72,6 @@ function saveUser(req,res){
 //Login
 function loginUser(req, res){
   var params=req.body;
-
-  console.log(params)
   var email=params.email;
   var password=params.password;
 
@@ -86,7 +84,6 @@ function loginUser(req, res){
                  user.password=undefined;//elimino la contraseña de los datos que retorno
                  //devolver datos de usuario
                  if(params.gettoken){
-                     console.log('hola');
                       //generar y devolver token
                       return res.status(200).send({
                           token: jwt.createToken(user)
