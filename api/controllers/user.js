@@ -199,37 +199,43 @@ function getCounters(req,res){
     if(req.params.id){
           userId=req.params.id;  
     }
-    getCountFollow(req.params.id).then((value)=>{
+    getCountFollow(userId).then((value)=>{
         return res.status(200).send(value);
     });
 }
 
-async function getCountFollow(user_id){
-         var following = await Follow.count({"user":user_id}).exec((err,count)=>{
-             if(err){
-                 return handleError(err);
-             }
-             return count;
-         });
-
-         var followed = await Follow.count({"followed":user_id}).exec((err,count)=>{
-            if(err){
-                return handleError(err);
+    async function getCountFollow(user_id){
+        try{
+            var following = await Follow.count({'user': user_id}).exec()
+                .then((following) =>{
+                    return following;
+                })
+                .catch((err) =>{
+                    return handleerror(err);
+                });
+            var followed = await Follow.count({'followed':user_id}).exec()
+                .then((followed) =>{
+                    return followed;
+                })
+                .catch((err) =>{
+                    return handleerror(err);
+                });
+            var publications = await Publication.count({'user':user_id}).exec()
+                .then((publications) =>{
+                    return publications
+                })
+                .catch((err) =>{
+                    return handleerror(err);
+                });
+    
+            return {
+                following: following,
+                followed: followed,
+                publications: publications
             }
-            return count;
-        });
-
-        var publications = await Publication.count({"user":user_id}).exec((err, count)=>{
-            if(err){
-                return handleError(err);
-            }
-            return count;
-        });
-
-        return{
-            following : following,
-            followed: followed,
-            publications : publications
+    
+        }catch(e){
+           console.log(e);
         }
 }
 

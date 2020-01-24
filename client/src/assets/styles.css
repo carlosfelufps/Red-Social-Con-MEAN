@@ -38,6 +38,10 @@
     background: #eee !important;
 }
 
+.pointer{
+    cursor: pointer;
+}
+
 .jumbotron{
     padding: 25px;
     border-radius: 5px;
